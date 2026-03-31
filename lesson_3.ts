@@ -7,19 +7,6 @@ abstract class BCD {
     abstract at(index: number): number;
 }
 
-const BCD8421_TABLE: Record<number, string> = {
-    0: '0000',
-    1: '0001',
-    2: '0010',
-    3: '0011',
-    4: '0100',
-    5: '0101',
-    6: '0110',
-    7: '0111',
-    8: '1000',
-    9: '1001',
-};
-
 class BCD8421 extends BCD {
     private readonly digits: Uint8Array;
 
@@ -36,42 +23,49 @@ class BCD8421 extends BCD {
             }
         }
 
-        const decimalString = num.toString();
-        this.digits = new Uint8Array(decimalString.length);
+        const sourceValue = BigInt(num);
 
-        for (let i = 0; i < decimalString.length; i += 1) {
-            const digit = Number(decimalString[i]);
+        if (sourceValue === 0n) {
+            this.digits = new Uint8Array([0]);
+            return;
+        }
 
-            if (Number.isNaN(digit) || digit < 0 || digit > 9) {
-                throw new Error('Некорректная цифра в числе');
-            }
+        let tempValue = sourceValue;
+        let digitsLength: number = 0;
 
-            this.digits[i] = digit;
+
+        while(tempValue > 0n) {
+            digitsLength += 1;
+
+            tempValue /= 10n;
+        }
+
+        tempValue = sourceValue;
+
+        this.digits = new Uint8Array(digitsLength);
+
+        for(let i = digitsLength - 1; i >= 0; i--) {
+            this.digits[i] = Number(tempValue % 10n);
+            tempValue /= 10n;
         }
     }
 
     toBigint(): bigint {
-        let binaryString = '';
+        let result = 0n;
 
         for (const digit of this.digits) {
-            binaryString += BCD8421_TABLE[digit];
-        }
-
-        return BigInt('0b' + binaryString);
-    }
-
-    toNumber(): number {
-        return Number(this.toString());
-    }
-
-    toString(): string {
-        let result = '';
-
-        for (const digit of this.digits) {
-            result += digit.toString();
+            result = BigInt(digit) * 10n + BigInt(digit);
         }
 
         return result;
+    }
+
+    toNumber(): number {
+        return Number(this.toBigint());
+    }
+
+    toString(): string {
+        return this.toBigint().toString();
     }
 
     at(index: number): number {
@@ -87,7 +81,7 @@ class BCD8421 extends BCD {
 
 const n = new BCD8421(65536);
 
-console.log(n.toBigint()); // 415030n
+console.log(n.toBigint()); // 65536n
 console.log(n.toNumber()); // 65536
 console.log(n.toString()); // "65536"
 
