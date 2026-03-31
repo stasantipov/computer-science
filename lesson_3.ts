@@ -54,7 +54,7 @@ class BCD8421 extends BCD {
         let result = 0n;
 
         for (const digit of this.digits) {
-            result = BigInt(digit) * 10n + BigInt(digit);
+            result = BigInt(result) * 10n + BigInt(digit);
         }
 
         return result;
