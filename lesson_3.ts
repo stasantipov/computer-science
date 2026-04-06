@@ -8,7 +8,8 @@ abstract class BCD {
 }
 
 class BCD8421 extends BCD {
-    private readonly digits: Uint8Array;
+    private readonly packedDigits: Uint8Array;
+    private readonly digitsLength: number;
 
     constructor(num: number | bigint) {
         super(num);
@@ -25,27 +26,20 @@ class BCD8421 extends BCD {
 
         const sourceValue = BigInt(num);
 
-        if (sourceValue === 0n) {
-            this.digits = new Uint8Array([0]);
-            return;
-        }
-
         let tempValue = sourceValue;
-        let digitsLength: number = 0;
+        let digitsLength = 0;
 
-
-        while(tempValue > 0n) {
+        do {
             digitsLength += 1;
-
             tempValue /= 10n;
-        }
+        } while (tempValue !== 0n);
 
+        this.digitsLength = digitsLength;
         tempValue = sourceValue;
+        this.packedDigits = new Uint8Array(Math.ceil(digitsLength / 2));
 
-        this.digits = new Uint8Array(digitsLength);
-
-        for(let i = digitsLength - 1; i >= 0; i--) {
-            this.digits[i] = Number(tempValue % 10n);
+        for (let i = digitsLength - 1; i >= 0; i--) {
+            this.setDigit(i, Number(tempValue % 10n));
             tempValue /= 10n;
         }
     }
@@ -53,8 +47,8 @@ class BCD8421 extends BCD {
     toBigint(): bigint {
         let result = 0n;
 
-        for (const digit of this.digits) {
-            result = BigInt(result) * 10n + BigInt(digit);
+        for (let i = 0; i < this.digitsLength; i++) {
+            result = result * 10n + BigInt(this.getDigit(i));
         }
 
         return result;
@@ -69,23 +63,42 @@ class BCD8421 extends BCD {
     }
 
     at(index: number): number {
-        const normalizedIndex = index >= 0 ? index : this.digits.length + index;
+        const normalizedIndex = index >= 0 ? index : this.digitsLength + index;
 
-        if (normalizedIndex < 0 || normalizedIndex >= this.digits.length) {
+        if (normalizedIndex < 0 || normalizedIndex >= this.digitsLength) {
             throw new RangeError('Индекс выходит за пределы числа');
         }
 
-        return this.digits[normalizedIndex];
+        return this.getDigit(normalizedIndex);
+    }
+
+    private getDigit(index: number): number {
+        const byteIndex = Math.floor(index / 2);
+        const isHighNibble = index % 2 === 0;
+        const byte = this.packedDigits[byteIndex];
+
+        return isHighNibble ? byte >> 4 : byte & 0b1111;
+    }
+
+    private setDigit(index: number, digit: number): void {
+        const byteIndex = Math.floor(index / 2);
+        const isHighNibble = index % 2 === 0;
+
+        if (isHighNibble) {
+            this.packedDigits[byteIndex] |= digit << 4;
+            return;
+        }
+
+        this.packedDigits[byteIndex] |= digit;
     }
 }
 
 const n = new BCD8421(65536);
+n.toBigint(); // 65536n
+// console.log(n.toNumber()); // 65536
+// console.log(n.toString()); // "65536"
 
-console.log(n.toBigint()); // 65536n
-console.log(n.toNumber()); // 65536
-console.log(n.toString()); // "65536"
-
-console.log(n.at(0));  // 6
-console.log(n.at(1));  // 5
-console.log(n.at(-1)); // 6
-console.log(n.at(-2)); // 3
+// console.log(n.at(0));  // 6
+// console.log(n.at(1));  // 5
+// console.log(n.at(-1)); // 6
+// console.log(n.at(-2)); // 3
