@@ -96,6 +96,7 @@
   | табуляция | 110 11101 |
   | перевод строки | 110 11110 |
 
+```ts
 const encoding: Record<string, string> = {
   ' ': '0000',
   'о': '0001',
@@ -268,3 +269,4 @@ const MyEncoding = {
 const bytes = MyEncoding.encode('Какая-то строка!');
 console.log(bytes); // Uint8Array
 console.log(MyEncoding.decode(bytes)); // "Какая-то строка!"
+```
