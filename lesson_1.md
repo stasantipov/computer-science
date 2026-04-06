@@ -96,76 +96,175 @@
   | табуляция | 110 11101 |
   | перевод строки | 110 11110 |
 
+const encoding: Record<string, string> = {
+  ' ': '0000',
+  'о': '0001',
+  'е': '0010',
+  'а': '0011',
 
-Вариант 2. Каждый символ по 8 бит.
+  'и': '01000',
+  'н': '01001',
+  'т': '01010',
+  'с': '01011',
+  'р': '01100',
+  'в': '01101',
+  'л': '01110',
+  'к': '01111',
 
-| Символ | HEX | Биты |
-|--------|-----|------|
-| CAPS | 0x01 | 00000001 |
-| \t | 0x09 | 00001001 |
-| \n | 0x0A | 00001010 |
-| (пробел) | 0x20 | 00100000 |
+  'м': '100000',
+  'д': '100001',
+  'п': '100010',
+  'у': '100011',
+  'я': '100100',
+  'ы': '100101',
+  'ь': '100110',
+  'г': '100111',
+  'з': '101000',
+  'б': '101001',
+  'ч': '101010',
+  'й': '101011',
+  'х': '101100',
+  'ж': '101101',
+  'ш': '101110',
+  'ю': '101111',
 
-| 0 | 0x30 | 00110000 |
-| 1 | 0x31 | 00110001 |
-| 2 | 0x32 | 00110010 |
-| 3 | 0x33 | 00110011 |
-| 4 | 0x34 | 00110100 |
-| 5 | 0x35 | 00110101 |
-| 6 | 0x36 | 00110110 |
-| 7 | 0x37 | 00110111 |
-| 8 | 0x38 | 00111000 |
-| 9 | 0x39 | 00111001 |
+  'ц': '11000000',
+  'щ': '11000001',
+  'э': '11000010',
+  'ф': '11000011',
+  'ё': '11000100',
+  'ъ': '11000101',
+  'CAP': '11000110',
+  '0': '11000111',
+  '1': '11001000',
+  '2': '11001001',
+  '3': '11001010',
+  '4': '11001011',
+  '5': '11001100',
+  '6': '11001101',
+  '7': '11001110',
+  '8': '11001111',
+  '9': '11010000',
+  '.': '11010001',
+  ',': '11010010',
+  '!': '11010011',
+  '?': '11010100',
+  '-': '11010111',
+  '(': '11011000',
+  ')': '11011001',
+  '"': '11011010',
+  '\t': '11011101',
+  '\n': '11011110'
+};
 
-| ! | 0x21 | 00100001 |
-| " | 0x22 | 00100010 |
-| ' | 0x27 | 00100111 |
-| ( | 0x28 | 00101000 |
-| ) | 0x29 | 00101001 |
-| , | 0x2C | 00101100 |
-| - | 0x2D | 00101101 |
-| . | 0x2E | 00101110 |
-| / | 0x2F | 00101111 |
-| : | 0x3A | 00111010 |
-| ; | 0x3B | 00111011 |
-| ? | 0x3F | 00111111 |
+const reverseEncoding = Object.fromEntries(
+  Object.entries(encoding).map(([char, bits]) => [bits, char])
+) as Record<string, string>;
 
-| а | 0x80 | 10000000 |
-| б | 0x81 | 10000001 |
-| в | 0x82 | 10000010 |
-| г | 0x83 | 10000011 |
-| д | 0x84 | 10000100 |
-| е | 0x85 | 10000101 |
-| ё | 0x86 | 10000110 |
-| ж | 0x87 | 10000111 |
-| з | 0x88 | 10001000 |
-| и | 0x89 | 10001001 |
-| й | 0x8A | 10001010 |
-| к | 0x8B | 10001011 |
-| л | 0x8C | 10001100 |
-| м | 0x8D | 10001101 |
-| н | 0x8E | 10001110 |
-| о | 0x8F | 10001111 |
-| п | 0x90 | 10010000 |
-| р | 0x91 | 10010001 |
-| с | 0x92 | 10010010 |
-| т | 0x93 | 10010011 |
-| у | 0x94 | 10010100 |
-| ф | 0x95 | 10010101 |
-| х | 0x96 | 10010110 |
-| ц | 0x97 | 10010111 |
-| ч | 0x98 | 10011000 |
-| ш | 0x99 | 10011001 |
-| щ | 0x9A | 10011010 |
-| ъ | 0x9B | 10011011 |
-| ы | 0x9C | 10011100 |
-| ь | 0x9D | 10011101 |
-| э | 0x9E | 10011110 |
-| ю | 0x9F | 10011111 |
-| я | 0xA0 | 10100000 |
+function isUpperCase(char: string) {
+  return char === char.toUpperCase() && char !== char.toLowerCase();
+}
 
-| « | 0xC0 | 11000000 |
-| » | 0xC1 | 11000001 |
-| № | 0xC2 | 11000010 |
-| — | 0xC3 | 11000011 |
-| … | 0xC4 | 11000100 |
+function getCodeLength(bits: string, index: number): number {
+  const prefix2 = bits.slice(index, index + 2);
+
+  if (prefix2 === '00' || prefix2 === '01' || prefix2 === '10') {
+    return prefix2 === '00' ? 4 : prefix2 === '01' ? 5 : 6;
+  }
+
+  if (bits.slice(index, index + 3) === '110') {
+    return 8;
+  }
+
+  throw new Error(`Некорректный префикс в позиции ${index}`);
+}
+
+const MyEncoding = {
+  encode(str: string): Uint8Array {
+    let bitStream = '';
+
+    for (const char of str) {
+      if (isUpperCase(char)) {
+        const lowerCharBits = encoding[char.toLowerCase()];
+
+        if (!lowerCharBits) {
+          throw new Error(`Символ "${char}" не поддерживается кодировкой`);
+        }
+
+        bitStream += encoding.CAP + lowerCharBits;
+        continue;
+      }
+
+      const bits = encoding[char];
+
+      if (!bits) {
+        throw new Error(`Символ "${char}" не поддерживается кодировкой`);
+      }
+
+      bitStream += bits;
+    }
+
+    const bitLength = bitStream.length;
+    const paddedBitStream = bitStream.padEnd(Math.ceil(bitLength / 8) * 8, '0');
+    const bytes = new Uint8Array(4 + paddedBitStream.length / 8);
+    const view = new DataView(bytes.buffer);
+
+    view.setUint32(0, bitLength);
+
+    for (let i = 0; i < paddedBitStream.length; i += 8) {
+      bytes[4 + i / 8] = parseInt(paddedBitStream.slice(i, i + 8), 2);
+    }
+
+    return bytes;
+  },
+
+  decode(bytes: Uint8Array): string {
+    if (bytes.length < 4) {
+      throw new Error('Поток байтов слишком короткий');
+    }
+
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const bitLength = view.getUint32(0);
+    let bitStream = '';
+
+    for (let i = 4; i < bytes.length; i++) {
+      bitStream += bytes[i].toString(2).padStart(8, '0');
+    }
+
+    bitStream = bitStream.slice(0, bitLength);
+
+    let result = '';
+    let shouldUppercaseNext = false;
+    let index = 0;
+
+    while (index < bitStream.length) {
+      const codeLength = getCodeLength(bitStream, index);
+      const code = bitStream.slice(index, index + codeLength);
+      const decodedChar = reverseEncoding[code];
+
+      if (!decodedChar) {
+        throw new Error(`Неизвестный код "${code}"`);
+      }
+
+      if (decodedChar === 'CAP') {
+        shouldUppercaseNext = true;
+        index += codeLength;
+        continue;
+      }
+
+      result += shouldUppercaseNext ? decodedChar.toUpperCase() : decodedChar;
+      shouldUppercaseNext = false;
+      index += codeLength;
+    }
+
+    if (shouldUppercaseNext) {
+      throw new Error('Поток битов оканчивается служебным кодом CAP');
+    }
+
+    return result;
+  }
+};
+
+const bytes = MyEncoding.encode('Какая-то строка!');
+console.log(bytes); // Uint8Array
+console.log(MyEncoding.decode(bytes)); // "Какая-то строка!"
