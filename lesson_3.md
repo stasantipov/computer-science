@@ -1,3 +1,4 @@
+```ts
 abstract class BCD {
     constructor(_num: number | bigint) {}
 
@@ -102,3 +103,4 @@ n.toBigint(); // 65536n
 // console.log(n.at(1));  // 5
 // console.log(n.at(-1)); // 6
 // console.log(n.at(-2)); // 3
+```
