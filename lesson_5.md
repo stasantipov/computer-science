@@ -368,7 +368,20 @@ runBenchmarks();
 
 
 📈 Итог сравнения
-typed-array почти всегда топ по чтению. Лидер в ColMajor. Лучший fill на больших данных.
-flat-array лучший fill на средних размерах. Хороший RowMajor. Сильная деградация на больших ColMajor.
-array-of-arrays — нормальный RowMajor. Иногда лучше flat-array в ColMajor. Очень медленный fill.
-array-of-objects — худший. Самый медленный fill. Худший RowMajor. ColMajor иногда «случайно норм».
+
+typed-array — почти всегда топ по чтению.  
+  Лидер в ColMajor.  
+  Лучший fill на больших данных.  
+
+flat-array — лучший fill на средних размерах.  
+  Хороший RowMajor.  
+  Сильная деградация на больших ColMajor.  
+
+array-of-arrays — нормальный RowMajor.  
+  Иногда лучше flat-array в ColMajor.  
+  Очень медленный fill.  
+
+array-of-objects — худший.  
+  Самый медленный fill.  
+  Худший RowMajor.  
+  ColMajor иногда «случайно норм».  
